@@ -3,6 +3,7 @@
 // Also loads the Google Fonts we use throughout the app
 
 import type { Metadata } from 'next';
+import dynamic from 'next/dynamic';
 import { AuthProvider } from '../src/context/AuthContext';
 import './globals.css';
 

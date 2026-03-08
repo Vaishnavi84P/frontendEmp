@@ -13,7 +13,7 @@ import { employeeAPI, validateAPI } from '../../../src/services/api';
 
 const DEPARTMENTS = [
   'Engineering', 'Human Resources', 'Sales', 'Marketing', 'Finance',
-  'Operations', 'IT Support', 'Legal', 'Product', 'Design',
+  'Operations', 'IT Support', 'Legal', 'Product', 'Design', 'Administration'
 ];
 
 // map fraud_risk value to a display color

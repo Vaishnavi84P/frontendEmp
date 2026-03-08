@@ -8,14 +8,18 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../../src/context/AuthContext';
 import Sidebar from '../../src/components/Sidebar';
 import { analyticsAPI } from '../../src/services/api';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
+import { Doughnut, Bar } from 'react-chartjs-2';
+
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
 export default function AnalyticsPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  const [stats, setStats]       = useState(null);
-  const [insights, setInsights] = useState(null);
-  const [fetching, setFetching] = useState(true);
+  const [stats, setStats]         = useState(null);
+  const [insights, setInsights]   = useState(null);
+  const [fetching, setFetching]   = useState(true);
   const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
@@ -46,11 +50,43 @@ export default function AnalyticsPage() {
   }
 
   // pull the numbers we need
-  const total    = stats?.total_employees ?? 0;
-  const active   = stats?.active_employees ?? 0;
-  const flagged  = stats?.flagged_employees ?? 0;
-  const valRate  = stats?.validation_success_rate ?? 0;
-  const byDept   = stats?.by_department ?? [];
+  const total   = stats?.total_employees ?? 0;
+  const active  = stats?.active_employees ?? 0;
+  const flagged = stats?.flagged_employees ?? 0;
+  const valRate = stats?.validation_success_rate ?? 0;
+  const byDept  = stats?.by_department ?? [];
+
+  const doughnutData = {
+    labels: byDept.map((d) => d.department || d.name),
+    datasets: [{
+      data: byDept.map((d) => d.count),
+      backgroundColor: ['#00d4ff','#7c3aed','#10b981','#f59e0b','#ef4444','#3b82f6','#ec4899','#14b8a6','#f97316','#8b5cf6'],
+      borderWidth: 0,
+    }]
+  };
+
+  const barData = {
+    labels: ['Validated', 'Pending', 'Flagged'],
+    datasets: [{
+      label: 'Employees',
+      data: [
+        stats?.validated_employees ?? 0,
+        stats?.pending_employees ?? 0,
+        stats?.flagged_employees ?? 0
+      ],
+      backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+      borderRadius: 6,
+    }]
+  };
+
+  const barOptions = {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, ticks: { color: '#94a3b8' } },
+      x: { ticks: { color: '#94a3b8' } }
+    }
+  };
 
   return (
     <div className="app-layout">
@@ -65,10 +101,10 @@ export default function AnalyticsPage() {
         {/* summary cards */}
         <div className="stats-grid" style={{ marginBottom: 24 }}>
           {[
-            { label: 'Total Employees',  value: total,                    color: 'var(--accent)'  },
-            { label: 'Active',           value: active,                   color: 'var(--success)' },
-            { label: 'Flagged',          value: flagged,                  color: 'var(--warning)' },
-            { label: 'Validation Rate',  value: `${Math.round(valRate)}%`, color: 'var(--accent2)' },
+            { label: 'Total Employees', value: total,                     color: 'var(--accent)'  },
+            { label: 'Active',          value: active,                    color: 'var(--success)' },
+            { label: 'Flagged',         value: flagged,                   color: 'var(--warning)' },
+            { label: 'Validation Rate', value: `${Math.round(valRate)}%`, color: 'var(--accent2)' },
           ].map((s, i) => (
             <div className="stat-card" key={i}>
               <div className="stat-label">{s.label}</div>
@@ -78,32 +114,14 @@ export default function AnalyticsPage() {
         </div>
 
         <div className="grid-2">
-          {/* department breakdown */}
+          {/* department breakdown doughnut chart */}
           <div className="card">
             <div className="card-title">Department Breakdown</div>
             {byDept.length === 0 ? (
               <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No data yet.</p>
             ) : (
-              <div>
-                {byDept.map((dept, i) => {
-                  const pct = total ? Math.round((dept.count / total) * 100) : 0;
-                  return (
-                    <div key={i} style={{ marginBottom: 14 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                        <span style={{ fontSize: '0.85rem', color: 'var(--text-dim)' }}>
-                          {dept.department || dept.name}
-                        </span>
-                        <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                          {dept.count} ({pct}%)
-                        </span>
-                      </div>
-                      {/* progress bar */}
-                      <div style={{ height: 6, background: 'var(--surface2)', borderRadius: 3, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${pct}%`, background: 'linear-gradient(90deg, var(--accent), var(--accent2))', borderRadius: 3, transition: 'width 0.5s ease' }} />
-                      </div>
-                    </div>
-                  );
-                })}
+              <div style={{ maxWidth: 300, margin: '0 auto' }}>
+                <Doughnut data={doughnutData} />
               </div>
             )}
           </div>
@@ -131,6 +149,14 @@ export default function AnalyticsPage() {
                 )}
               </div>
             )}
+          </div>
+        </div>
+
+        {/* validation status bar chart */}
+        <div className="card" style={{ marginTop: 24 }}>
+          <div className="card-title">Validation Status Overview</div>
+          <div style={{ maxWidth: 500, margin: '0 auto' }}>
+            <Bar data={barData} options={barOptions} />
           </div>
         </div>
 

@@ -1,7 +1,9 @@
+
 // api.js
 // This file handles all API calls to our Flask backend
 // Backend is running on port 5000, all routes are under /api/v1/
 // I'm using a simple fetch wrapper so I don't repeat headers everywhere
+
 
 const BACKEND_URL = 'http://127.0.0.1:5000/api/v1';
 
@@ -30,8 +32,9 @@ async function callAPI(path, options = {}) {
     const result = await response.json();
 
     // if backend returned an error status, throw it so the UI can catch it
-    if (!response.ok) {
-      throw new Error(result.message || result.error || `Something went wrong (${response.status})`);
+
+    if(!response.ok) {
+      throw new Error(result.message || result.error || `Something Went Wrong (${response.status})`);
     }
 
     return result;
